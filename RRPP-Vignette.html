@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Dean C. Adams" />
+
+<meta name="date" content="2019-11-21" />
+
+<title>RRPP: An R package for fitting linear models to high-dimensional data using residual randomization</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#header {
+text-align: center;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">RRPP: An R package for fitting linear models to high-dimensional data using residual randomization</h1>
+<h4 class="author">Dean C. Adams</h4>
+<h4 class="date">2019-11-21</h4>
+
+
+
+<div id="the-rrpp-package" class="section level1">
+<h1>The RRPP Package</h1>
+<p><code>RRPP</code> is a package for fitting linear models to high-dimensional (multivariate) data, or univariate data, and evaluating those models and related components using residual randomization permutation procedures (RRPP).</p>
+<p>The methods in <code>RRPP</code> are based on analytical advances in: Collyer and Adams (2013); Collyer, Sekora, and Adams (2015), Adams and Collyer (2016; 2018a, 2018b, 2019). Our work developed residual randomization for multivariate data analysis; extending univariate results from Anderson and colleagues (e.g., Anderson 2001; McArdle and Anderson, 2001; Anderson and terBraak 2003). Our work also provides a permutation-based <em>effect size</em>, which is useful for evaluating the strength of signal in datasets.</p>
+<p>The<code>RRPP</code> package was announced in Methods in Ecology and Evolution (Collyer and Adams, 2018: MEE), and the CRAN install contains several vignette tutorials and extensive help files to assist the user.</p>
+<p><strong><em>Getting Started: An RRPP data frame</em></strong></p>
+<p>Using <code>RRPP</code> it is often useful to create an RRPP data frame, and call components from this object. RRPP data frames are lists, and can include vectors, factors and various matrices (data matrices, covariance matrices, and distance matrices).</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">library</span>(RRPP)</a>
+<a class="sourceLine" id="cb1-2" title="2">y &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">rnorm</span>(<span class="dv">30</span>), <span class="dv">10</span>, <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb1-3" title="3">x &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb1-4" title="4">rdf &lt;-<span class="st"> </span><span class="kw">rrpp.data.frame</span>(<span class="dt">x =</span> x, <span class="dt">y =</span> y)</a>
+<a class="sourceLine" id="cb1-5" title="5">rdf <span class="co"># looks more like a list</span></a></code></pre></div>
+<pre><code>## $x
+##  [1]  0.14744905  0.76286687  1.48245623 -2.22197658  0.16672485 -0.03101713
+##  [7]  0.59571824 -0.03631942  0.37505887 -0.04337771
+## 
+## $y
+##              [,1]       [,2]        [,3]
+##  [1,]  0.38960411 -0.3118144  2.02619896
+##  [2,] -0.82051775  0.2515111  0.78008102
+##  [3,]  2.35058745 -0.4875515  0.06050099
+##  [4,]  0.03143518 -0.4892526  0.86042167
+##  [5,] -0.04064242 -1.6994859 -0.40568729
+##  [6,] -0.91144854 -0.8266679 -0.38140184
+##  [7,] -0.33782898  0.4104055 -0.86202232
+##  [8,]  0.21063859  0.7525533  0.25245822
+##  [9,] -0.66854191 -0.6372315 -1.22094777
+## [10,]  0.39445201 -0.8944989  0.51047330
+## 
+## attr(,&quot;class&quot;)
+## [1] &quot;rrpp.data.frame&quot;</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1">d &lt;-<span class="st"> </span><span class="kw">dist</span>(y) <span class="co"># distance matrix as data</span></a>
+<a class="sourceLine" id="cb3-2" title="2">rdf &lt;-<span class="st"> </span><span class="kw">rrpp.data.frame</span>(rdf, <span class="dt">d =</span> d) <span class="co"># works</span></a></code></pre></div>
+<p><strong><em>Example 1: Univariate ANOVA and Mixed-Models</em></strong></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">data</span>(<span class="st">&quot;PupfishHeads&quot;</span>)</a>
+<a class="sourceLine" id="cb4-2" title="2"><span class="kw">str</span>(PupfishHeads)</a></code></pre></div>
+<pre><code>## List of 7
+##  $ locality: Factor w/ 2 levels &quot;Lake&quot;,&quot;SH&quot;: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ year    : Factor w/ 6 levels &quot;1987&quot;,&quot;1998&quot;,..: 3 3 3 3 3 3 3 3 3 3 ...
+##  $ month   : Factor w/ 7 levels &quot;4&quot;,&quot;5&quot;,&quot;6&quot;,&quot;7&quot;,..: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ sex     : Factor w/ 2 levels &quot;Female&quot;,&quot;Male&quot;: 1 1 1 1 1 2 1 1 1 1 ...
+##  $ coords  : num [1:268, 1:90] -0.186 -0.193 -0.192 -0.192 -0.185 ...
+##   ..- attr(*, &quot;dimnames&quot;)=List of 2
+##   .. ..$ : chr [1:268] &quot;395&quot; &quot;396&quot; &quot;397&quot; &quot;398&quot; ...
+##   .. ..$ : NULL
+##  $ headDist: &#39;dist&#39; num [1:35778] 0.0768 0.0844 0.0905 0.0837 0.0655 ...
+##   ..- attr(*, &quot;Size&quot;)= int 268
+##   ..- attr(*, &quot;Labels&quot;)= chr [1:268] &quot;395&quot; &quot;396&quot; &quot;397&quot; &quot;398&quot; ...
+##   ..- attr(*, &quot;Diag&quot;)= logi FALSE
+##   ..- attr(*, &quot;Upper&quot;)= logi FALSE
+##   ..- attr(*, &quot;method&quot;)= chr &quot;euclidean&quot;
+##   ..- attr(*, &quot;call&quot;)= language dist(x = coords)
+##  $ headSize: Named num [1:268] 16.2 15.5 21.7 22.6 23.2 ...
+##   ..- attr(*, &quot;names&quot;)= chr [1:268] &quot;395&quot; &quot;396&quot; &quot;397&quot; &quot;398&quot; ...
+##  - attr(*, &quot;class&quot;)= chr &quot;rrpp.data.frame&quot;</code></pre>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1">PupfishHeads<span class="op">$</span>logHeadSize &lt;-<span class="st"> </span><span class="kw">log</span>(PupfishHeads<span class="op">$</span>headSize)</a>
+<a class="sourceLine" id="cb6-2" title="2">fit &lt;-<span class="st"> </span><span class="kw">lm.rrpp</span>(logHeadSize <span class="op">~</span><span class="st"> </span>sex <span class="op">+</span><span class="st"> </span>locality<span class="op">/</span>year, </a>
+<a class="sourceLine" id="cb6-3" title="3">               <span class="dt">SS.type =</span> <span class="st">&quot;I&quot;</span>, <span class="dt">data =</span> PupfishHeads, </a>
+<a class="sourceLine" id="cb6-4" title="4">               <span class="dt">print.progress =</span> <span class="ot">FALSE</span>, <span class="dt">iter =</span> <span class="dv">9999</span>)</a></code></pre></div>
+<pre><code>## 
+## Warning: Because variables in the linear model are redundant,
+## the linear model design has been truncated (via QR decomposition).
+## Original X columns: 13
+## Final X columns (rank): 9
+## Check coefficients or degrees of freedom in ANOVA to see changes.</code></pre>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">coef</span>(fit)</a></code></pre></div>
+<pre><code>##                              [,1]
+## (Intercept)            3.12716415
+## sexMale                0.09162777
+## localitySH            -0.07571832
+## localitySH:year1998   -0.06402169
+## localityLake:year1999 -0.35681331
+## localitySH:year1999   -0.01328613
+## localitySH:year2000   -0.07165589
+## localityLake:year2001 -0.23035259
+## localityLake:year2002 -0.31050534</code></pre>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">summary</span>(fit)</a></code></pre></div>
+<pre><code>## 
+## Warning: Because variables in the linear model are redundant,
+## the linear model design has been truncated (via QR decomposition).
+## Original X columns: 13
+## Final X columns (rank): 9
+## Check coefficients or degrees of freedom in ANOVA to see changes.</code></pre>
+<pre><code>## 
+## Linear Model fit with lm.rrpp
+## 
+## Number of observations: 268
+## Number of dependent variables: 1  
+## Data space dimensions: 1  
+## Sums of Squares and Cross-products: Type I
+## Number of permutations: 10000
+## 
+## Full Model Analysis of Variance
+## 
+##                     Df Residual Df       SS Residual SS       Rsq        F
+## sex + locality/year  8         259 2.718175    10.94887 0.1988854 8.037445
+##                     Z (from F) Pr(&gt;F)
+## sex + locality/year   4.093693  1e-04
+## 
+## 
+## Redundancy Analysis (PCA on fitted values and residuals)
+## 
+##                Trace Proportion Rank
+## Fitted    0.01018043  0.1988854    1
+## Residuals 0.04100699  0.8011146    1
+## Total     0.05118742  1.0000000    1
+## 
+## Eigenvalues
+## 
+##                  PC1
+## Fitted    0.01018043
+## Residuals 0.04100699
+## Total     0.05118742</code></pre>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">anova</span>(fit, <span class="dt">effect.type =</span> <span class="st">&quot;F&quot;</span>)<span class="op">$</span>table</a></code></pre></div>
+<pre><code>##                Df      SS      MS     Rsq       F      Z Pr(&gt;F)    
+## sex             1  0.6091 0.60911 0.04457 14.4087 1.7369  1e-04 ***
+## locality        1  0.4712 0.47121 0.03448 11.1466 1.6445  0.001 ** 
+## locality:year   6  1.6379 0.27298 0.11984  6.4574 3.1683  1e-04 ***
+## Residuals     259 10.9489 0.04227 0.80111                          
+## Total         267 13.6670                                          
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>NOTE the effect sizes (Z-scores) in the anova table. These provide a sense of the strength of signal for that particular pattern (very useful for multivariate data).</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" title="1"><span class="kw">hist</span>(fit<span class="op">$</span>ANOVA<span class="op">$</span>Fs[<span class="dv">3</span>,<span class="op">-</span><span class="dv">1</span>],<span class="dt">prob=</span><span class="ot">TRUE</span>, <span class="dt">xlab =</span> <span class="st">&quot;F-Empirical&quot;</span>, <span class="dt">main =</span> <span class="ot">NULL</span>)</a>
+<a class="sourceLine" id="cb15-2" title="2"><span class="kw">lines</span>(<span class="kw">density</span>(fit<span class="op">$</span>ANOVA<span class="op">$</span>Fs[<span class="dv">3</span>,<span class="op">-</span><span class="dv">1</span>]), <span class="dt">lwd=</span><span class="dv">2</span>, <span class="dt">col=</span><span class="st">&quot;red&quot;</span>)</a></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>And here we see that empirically-generated sampling distributions match those from theory</p>
+<p>Note that the ANOVA summary is a default that fails to consider the year fish were sampled as a random effect. A mixed-model ANOVA update can be performed by changing the expected mean-square (<em>MS</em>) error estimates in each <em>F</em> calculation:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">anova</span>(fit)</a></code></pre></div>
+<pre><code>## 
+## Analysis of Variance, using Residual Randomization
+## Permutation procedure: Randomization of null model residuals 
+## Number of permutations: 10000 
+## Estimation method: Ordinary Least Squares 
+## Sums of Squares and Cross-products: Type I 
+## Effect sizes (Z) based on F distributions
+## 
+##                Df      SS      MS     Rsq       F      Z Pr(&gt;F)    
+## sex             1  0.6091 0.60911 0.04457 14.4087 1.7369  1e-04 ***
+## locality        1  0.4712 0.47121 0.03448 11.1466 1.6445  0.001 ** 
+## locality:year   6  1.6379 0.27298 0.11984  6.4574 3.1683  1e-04 ***
+## Residuals     259 10.9489 0.04227 0.80111                          
+## Total         267 13.6670                                          
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Call: lm.rrpp(f1 = logHeadSize ~ sex + locality/year, iter = 9999,  
+##     SS.type = &quot;I&quot;, data = PupfishHeads, print.progress = FALSE)</code></pre>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">anova</span>(fit, <span class="dt">effect.type =</span> <span class="st">&quot;F&quot;</span>, </a>
+<a class="sourceLine" id="cb18-2" title="2">  <span class="dt">error =</span> <span class="kw">c</span>(<span class="st">&quot;Residuals&quot;</span>, <span class="st">&quot;locality:year&quot;</span>, <span class="st">&quot;Residuals&quot;</span>))</a></code></pre></div>
+<pre><code>## 
+## Analysis of Variance, using Residual Randomization
+## Permutation procedure: Randomization of null model residuals 
+## Number of permutations: 10000 
+## Estimation method: Ordinary Least Squares 
+## Sums of Squares and Cross-products: Type I 
+## Effect sizes (Z) based on F distributions
+## 
+##                Df      SS      MS     Rsq       F      Z Pr(&gt;F)    
+## sex             1  0.6091 0.60911 0.04457 14.4087 1.7369  1e-04 ***
+## locality        1  0.4712 0.47121 0.03448  1.7262 0.6889 0.2488    
+## locality:year   6  1.6379 0.27298 0.11984  6.4574 3.1683  1e-04 ***
+## Residuals     259 10.9489 0.04227 0.80111                          
+## Total         267 13.6670                                          
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Call: lm.rrpp(f1 = logHeadSize ~ sex + locality/year, iter = 9999,  
+##     SS.type = &quot;I&quot;, data = PupfishHeads, print.progress = FALSE)</code></pre>
+<p>It might be of interest to visualize model predictions for certain effects, holding constant other effects:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" title="1">sizeDF &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">sex =</span> <span class="kw">c</span>(<span class="st">&quot;Female&quot;</span>, <span class="st">&quot;Male&quot;</span>))</a>
+<a class="sourceLine" id="cb20-2" title="2"><span class="kw">rownames</span>(sizeDF) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Female&quot;</span>, <span class="st">&quot;Male&quot;</span>)</a>
+<a class="sourceLine" id="cb20-3" title="3">sizePreds &lt;-<span class="st"> </span><span class="kw">predict</span>(fit, sizeDF)</a></code></pre></div>
+<pre><code>## 
+## Warning: Not all variables in model accounted for in newdata.
+## Missing variables will be averaged from observed data for prediction.</code></pre>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" title="1"><span class="kw">plot</span>(sizePreds, <span class="dt">pch =</span> <span class="dv">21</span>, <span class="dt">cex =</span> <span class="dv">3</span>, <span class="dt">bg =</span> <span class="kw">c</span>(<span class="dv">2</span>,<span class="dv">4</span>), <span class="dt">lwd =</span> <span class="dv">2</span>)</a></code></pre></div>
+<pre><code>## Warning in bxp(list(stats = structure(c(2.75133018679936, 2.75133018679936, :
+## Duplicated argument pch = 21 is disregarded</code></pre>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>Finally, the <em>SS</em> type can be also toggled easily by refitting the model (I=sequential,II=conditional, III=marginal):</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" title="1">fit2 &lt;-<span class="st"> </span><span class="kw">lm.rrpp</span>(logHeadSize <span class="op">~</span><span class="st"> </span>sex <span class="op">+</span><span class="st"> </span>locality<span class="op">/</span>year, </a>
+<a class="sourceLine" id="cb24-2" title="2">                <span class="dt">SS.type =</span> <span class="st">&quot;II&quot;</span>, <span class="dt">data =</span> PupfishHeads, <span class="dt">print.progress =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
+<pre><code>## 
+## Warning: Because variables in the linear model are redundant,
+## the linear model design has been truncated (via QR decomposition).
+## Original X columns: 13
+## Final X columns (rank): 9
+## Check coefficients or degrees of freedom in ANOVA to see changes.</code></pre>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb26-1" title="1">fit3 &lt;-<span class="st"> </span><span class="kw">lm.rrpp</span>(logHeadSize <span class="op">~</span><span class="st"> </span>sex <span class="op">+</span><span class="st"> </span>locality<span class="op">/</span>year, </a>
+<a class="sourceLine" id="cb26-2" title="2">                <span class="dt">SS.type =</span> <span class="st">&quot;III&quot;</span>, <span class="dt">data =</span> PupfishHeads, <span class="dt">print.progress =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
+<pre><code>## 
+## Warning: Because variables in the linear model are redundant,
+## the linear model design has been truncated (via QR decomposition).
+## Original X columns: 13
+## Final X columns (rank): 9
+## Check coefficients or degrees of freedom in ANOVA to see changes.</code></pre>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb28-1" title="1"><span class="kw">anova</span>(fit)<span class="op">$</span>table</a></code></pre></div>
+<pre><code>##                Df      SS      MS     Rsq       F      Z Pr(&gt;F)    
+## sex             1  0.6091 0.60911 0.04457 14.4087 1.7369  1e-04 ***
+## locality        1  0.4712 0.47121 0.03448 11.1466 1.6445  0.001 ** 
+## locality:year   6  1.6379 0.27298 0.11984  6.4574 3.1683  1e-04 ***
+## Residuals     259 10.9489 0.04227 0.80111                          
+## Total         267 13.6670                                          
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb30-1" title="1"><span class="kw">anova</span>(fit2)<span class="op">$</span>table</a></code></pre></div>
+<pre><code>##                Df      SS      MS     Rsq       F      Z Pr(&gt;F)   
+## sex             1  0.5554 0.55537 0.04064 13.1376 1.7527  0.002 **
+## locality        1  0.4712 0.47121 0.03448 11.1466 1.7174  0.002 **
+## locality:year   6  1.6379 0.27298 0.11984  6.4574 3.1770  0.001 **
+## Residuals     259 10.9489 0.04227 0.80111                         
+## Total         267 13.6670                                         
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb32-1" title="1"><span class="kw">anova</span>(fit3)<span class="op">$</span>table</a></code></pre></div>
+<pre><code>##                Df      SS      MS     Rsq       F      Z Pr(&gt;F)   
+## sex             1  0.5554 0.55537 0.04064 13.1376 1.7527  0.002 **
+## locality        1  0.0573 0.05733 0.00419  1.3562 0.6674  0.255   
+## locality:year   6  1.6379 0.27298 0.11984  6.4574 3.1770  0.001 **
+## Residuals     259 10.9489 0.04227 0.80111                         
+## Total         267 13.6670                                         
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<hr />
+<p><strong><em>Example 2: RRPP with High-Dimensional Data</em></strong></p>
+<p>In the second example, we highlight the <code>RRPP</code> ability to efficiently handle high-dimensional data (<em>p</em>&gt;&gt;<em>n</em>) requiring large data computations. For this demonstration, a 54(<em>n</em>) × 112 (<em>p</em>) matrix of shape data are used.</p>
+<p>Here we evaluate shape as a function of size and groups (a multivariate ‘common slopes’ model):</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb34-1" title="1"><span class="kw">data</span>(Pupfish)</a>
+<a class="sourceLine" id="cb34-2" title="2">Pupfish<span class="op">$</span>logSize &lt;-<span class="st"> </span><span class="kw">log</span>(Pupfish<span class="op">$</span>CS) </a>
+<a class="sourceLine" id="cb34-3" title="3">fit &lt;-<span class="st"> </span><span class="kw">lm.rrpp</span>(coords <span class="op">~</span><span class="st"> </span>logSize <span class="op">+</span><span class="st"> </span>Sex<span class="op">*</span>Pop, <span class="dt">SS.type =</span> <span class="st">&quot;I&quot;</span>, </a>
+<a class="sourceLine" id="cb34-4" title="4">               <span class="dt">data =</span> Pupfish, <span class="dt">print.progress =</span> <span class="ot">FALSE</span>) </a>
+<a class="sourceLine" id="cb34-5" title="5"><span class="kw">summary</span>(fit, <span class="dt">formula =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
+<pre><code>## 
+## Linear Model fit with lm.rrpp
+## 
+## Number of observations: 54
+## Number of dependent variables: 112  
+## Data space dimensions: 53  
+## Sums of Squares and Cross-products: Type I
+## Number of permutations: 1000
+## 
+## Full Model Analysis of Variance
+## 
+##     Df Residual Df         SS Residual SS       Rsq        F Z (from F) Pr(&gt;F)
+## fit  4          49 0.03224913  0.02408373 0.5724746 16.40327   7.566011  0.001
+## 
+## 
+## Redundancy Analysis (PCA on fitted values and residuals)
+## 
+##                  Trace Proportion Rank
+## Fitted    0.0006084742  0.5724746    4
+## Residuals 0.0004544100  0.4275254   49
+## Total     0.0010628843  1.0000000   53
+## 
+## Eigenvalues
+## 
+##                    PC1          PC2          PC3          PC4          PC5
+## Fitted    0.0003849870 0.0001764119 0.0000308588 0.0000162165             
+## Residuals 0.0001619045 0.0000683959 0.0000504732 0.0000375901 0.0000204706
+## Total     0.0004644118 0.0002541398 0.0000722379 0.0000549026 0.0000491286
+##                    PC6          PC7          PC8          PC9         PC10
+## Fitted                                                                    
+## Residuals 0.0000158227 0.0000145861 0.0000120066 0.0000083853 0.0000074828
+## Total     0.0000333998 0.0000227294 0.0000187381 0.0000127668 0.0000090893
+##                   PC11         PC12         PC13         PC14         PC15
+## Fitted                                                                    
+## Residuals 0.0000068974 0.0000062331 0.0000054188 0.0000045485 0.0000043871
+## Total     0.0000088769 0.0000083661 0.0000064036 0.0000058026 0.0000051742
+##                   PC16         PC17         PC18         PC19         PC20
+## Fitted                                                                    
+## Residuals 0.0000032928 0.0000031713 0.0000027759 0.0000024382 0.0000023968
+## Total     0.0000046349 0.0000039689 0.0000033385 0.0000029455 0.0000027293
+##                   PC21         PC22         PC23         PC24         PC25
+## Fitted                                                                    
+## Residuals 0.0000020800 0.0000016410 0.0000013892 0.0000012122 0.0000010647
+## Total     0.0000024512 0.0000020110 0.0000019767 0.0000013932 0.0000012220
+##                   PC26         PC27         PC28         PC29         PC30
+## Fitted                                                                    
+## Residuals 0.0000009268 0.0000008974 0.0000008083 0.0000007337 0.0000006036
+## Total     0.0000010286 0.0000010076 0.0000009490 0.0000008017 0.0000006669
+##                   PC31         PC32         PC33         PC34         PC35
+## Fitted                                                                    
+## Residuals 0.0000005856 0.0000004746 0.0000004236 0.0000004042 0.0000003381
+## Total     0.0000006208 0.0000005973 0.0000005198 0.0000004633 0.0000004385
+##                   PC36         PC37         PC38         PC39         PC40
+## Fitted                                                                    
+## Residuals 0.0000003127 0.0000002573 0.0000002486 0.0000002226 0.0000002059
+## Total     0.0000003599 0.0000003568 0.0000003050 0.0000002580 0.0000002252
+##                   PC41         PC42         PC43         PC44         PC45
+## Fitted                                                                    
+## Residuals 0.0000001783 0.0000001509 0.0000001282 0.0000001152 0.0000000896
+## Total     0.0000002162 0.0000001941 0.0000001842 0.0000001527 0.0000001461
+##                   PC46         PC47         PC48         PC49         PC50
+## Fitted                                                                    
+## Residuals 0.0000000737 0.0000000708 0.0000000488 0.0000000468             
+## Total     0.0000001100 0.0000000963 0.0000000850 0.0000000697 0.0000000563
+##                   PC51         PC52         PC53
+## Fitted                                          
+## Residuals                                       
+## Total     0.0000000525 0.0000000447 0.0000000395</code></pre>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb36-1" title="1"><span class="kw">anova</span>(fit) </a></code></pre></div>
+<pre><code>## 
+## Analysis of Variance, using Residual Randomization
+## Permutation procedure: Randomization of null model residuals 
+## Number of permutations: 1000 
+## Estimation method: Ordinary Least Squares 
+## Sums of Squares and Cross-products: Type I 
+## Effect sizes (Z) based on F distributions
+## 
+##           Df       SS        MS     Rsq       F      Z Pr(&gt;F)   
+## logSize    1 0.014019 0.0140193 0.24886 28.5232 5.2763  0.001 **
+## Sex        1 0.007615 0.0076151 0.13518 15.4933 5.1241  0.001 **
+## Pop        1 0.007661 0.0076606 0.13599 15.5860 5.1072  0.001 **
+## Sex:Pop    1 0.002954 0.0029542 0.05244  6.0105 3.7891  0.002 **
+## Residuals 49 0.024084 0.0004915 0.42753                         
+## Total     53 0.056333                                           
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Call: lm.rrpp(f1 = coords ~ logSize + Sex * Pop, SS.type = &quot;I&quot;, data = Pupfish,  
+##     print.progress = FALSE)</code></pre>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb38-1" title="1"><span class="kw">coef</span>(fit, <span class="dt">test =</span> <span class="ot">TRUE</span>) </a></code></pre></div>
+<pre><code>## 
+## Linear Model fit with lm.rrpp
+## 
+## Number of observations: 54
+## Number of dependent variables: 112
+## Data space dimensions: 53
+## Sums of Squares and Cross-products: Type I
+## Number of permutations: 1000
+## 
+## Statistics (distances) of coefficients with 95 percent confidence intervals,
+## effect sizes, and probabilities of exceeding observed values based on
+## 1000 random permutations using RRPP 
+## 
+##                       d.obs  UCL (95%)        Zd Pr(&gt;d)
+## (Intercept)      1.10733195 1.02154943 14.760700  0.001
+## logSize          0.11101234 0.04871922  8.147328  0.001
+## SexM             0.02755503 0.01300605  7.672797  0.001
+## PopSinkhole      0.02895656 0.01256411  8.646444  0.001
+## SexM:PopSinkhole 0.03002431 0.01772916  5.715464  0.002</code></pre>
+<p>ANOVA results reveal that after accounting for body size allometry, not only are there significant inter-population differences in body shape and sexual dimorphism in body shape, but sexual dimorphism also significantly varies between the two populations.</p>
+<p>Now, to appreciate the flexibility of RRPP, compare this to the same analysis attempted via parametric methods:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb40-1" title="1">fit<span class="op">$</span>LM<span class="op">$</span>data<span class="op">$</span>coords &lt;-<span class="st"> </span>Pupfish<span class="op">$</span>coords</a>
+<a class="sourceLine" id="cb40-2" title="2">fit.par &lt;-<span class="st"> </span><span class="kw">lm</span>(fit<span class="op">$</span>call<span class="op">$</span>f1, <span class="dt">data =</span> fit<span class="op">$</span>LM<span class="op">$</span>data)</a>
+<a class="sourceLine" id="cb40-3" title="3"><span class="kw">identical</span>(fit<span class="op">$</span>LM<span class="op">$</span>coefficients, fit.par<span class="op">$</span>coefficients)</a></code></pre></div>
+<pre><code>## [1] TRUE</code></pre>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb42-1" title="1"><span class="kw">summary</span>(<span class="kw">manova</span>(fit.par))</a></code></pre></div>
+<pre><code>## Error in summary.manova(manova(fit.par)): residuals have rank 49 &lt; 112</code></pre>
+<p>Although both functions return the same coefficients, the error summarizing the attempted parametric M-ANOVA clearly indicates the limitation of having residual degrees of freedom (rank) lower than the number of variables. Returning to the <code>lm.rrpp</code> fit, which does not suffer this problem, as statistical evaluation is based on randomization, <em>as well as summary test measures that do not require the inversion of covariance matrices</em> (see Anderson 2001; Collyer, Sekora, and Adams 2015).</p>
+<p>We can examine the precision of group mean estimation, accounting for allometric shape variation, by doing the following:</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb44-1" title="1">shapeDF &lt;-<span class="st"> </span><span class="kw">expand.grid</span>(<span class="dt">Sex =</span> <span class="kw">levels</span>(Pupfish<span class="op">$</span>Sex), <span class="dt">Pop =</span> <span class="kw">levels</span>(Pupfish<span class="op">$</span>Pop))</a>
+<a class="sourceLine" id="cb44-2" title="2"><span class="kw">rownames</span>(shapeDF) &lt;-<span class="st"> </span><span class="kw">paste</span>(shapeDF<span class="op">$</span>Sex, shapeDF<span class="op">$</span>Pop, <span class="dt">sep =</span> <span class="st">&quot;.&quot;</span>)</a>
+<a class="sourceLine" id="cb44-3" title="3">shapePreds &lt;-<span class="st"> </span><span class="kw">predict</span>(fit, shapeDF, <span class="dt">confidence =</span> <span class="fl">0.95</span>)</a></code></pre></div>
+<pre><code>## 
+## Warning: Not all variables in model accounted for in newdata.
+## Missing variables will be averaged from observed data for prediction.</code></pre>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb46-1" title="1"><span class="kw">plot</span>(shapePreds, <span class="dt">PC =</span> <span class="ot">TRUE</span>, <span class="dt">ellipse =</span> <span class="ot">TRUE</span>, </a>
+<a class="sourceLine" id="cb46-2" title="2">     <span class="dt">pch =</span> <span class="dv">19</span>, <span class="dt">col =</span> <span class="dv">1</span><span class="op">:</span><span class="kw">NROW</span>(shapeDF)) <span class="co"># with added par arguments</span></a></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb47-1" title="1">groups &lt;-<span class="st"> </span><span class="kw">interaction</span>(Pupfish<span class="op">$</span>Sex, Pupfish<span class="op">$</span>Pop)</a>
+<a class="sourceLine" id="cb47-2" title="2"><span class="kw">plot</span>(fit, <span class="dt">type =</span> <span class="st">&quot;PC&quot;</span>, <span class="dt">pch =</span> <span class="dv">19</span>, <span class="dt">col =</span> groups) <span class="co"># with added par arguments</span></a></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>Here, <code>RRPP</code> is providing an ordination of <strong>predicted or fitted values</strong> via principal components. These plots differ as there is a rotational difference between the covariance matrices estimated with 4 predicted and 54 fitted values. Additionally, the former illustrates prediction precision and the latter sample dispersion. Both functions allow passing <code>par</code> arguments to the plot as well as saving plot data for more advanced plotting. The following is a regression-type plot:</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb48-1" title="1"><span class="kw">plot</span>(fit, <span class="dt">type =</span> <span class="st">&quot;regression&quot;</span>, <span class="dt">reg.type =</span> <span class="st">&quot;PredLine&quot;</span>, </a>
+<a class="sourceLine" id="cb48-2" title="2">    <span class="dt">predictor =</span> Pupfish<span class="op">$</span>logSize, <span class="dt">pch=</span><span class="dv">19</span>,</a>
+<a class="sourceLine" id="cb48-3" title="3">    <span class="dt">col =</span> <span class="kw">as.numeric</span>(groups))</a></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>Because the multivariate data above reside in a Euclidean (=metric) space, this analysis could be performed with an object of class <code>dist</code> (values from lower half of a distance matrix) representing the inter-specimen shape (Euclidean) distances, using the following code:</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb49-1" title="1">D &lt;-<span class="st"> </span><span class="kw">dist</span>(Pupfish<span class="op">$</span>coords) <span class="co"># inter-observation Euclidean distances</span></a>
+<a class="sourceLine" id="cb49-2" title="2">Pupfish<span class="op">$</span>D &lt;-<span class="st"> </span>D</a>
+<a class="sourceLine" id="cb49-3" title="3"></a>
+<a class="sourceLine" id="cb49-4" title="4">fitD &lt;-<span class="st"> </span><span class="kw">lm.rrpp</span>(D <span class="op">~</span><span class="st"> </span>logSize <span class="op">+</span><span class="st"> </span>Sex<span class="op">*</span>Pop, <span class="dt">SS.type =</span> <span class="st">&quot;I&quot;</span>, </a>
+<a class="sourceLine" id="cb49-5" title="5">                <span class="dt">data =</span> Pupfish, <span class="dt">print.progress =</span> <span class="ot">FALSE</span>) </a>
+<a class="sourceLine" id="cb49-6" title="6"><span class="kw">anova</span>(fitD)</a></code></pre></div>
+<pre><code>## 
+## Analysis of Variance, using Residual Randomization
+## Permutation procedure: Randomization of null model residuals 
+## Number of permutations: 1000 
+## Estimation method: Ordinary Least Squares 
+## Sums of Squares and Cross-products: Type I 
+## Effect sizes (Z) based on F distributions
+## 
+##           Df       SS        MS     Rsq       F      Z Pr(&gt;F)   
+## logSize    1 0.014019 0.0140193 0.24886 28.5232 5.2763  0.001 **
+## Sex        1 0.007615 0.0076151 0.13518 15.4933 5.1241  0.001 **
+## Pop        1 0.007661 0.0076606 0.13599 15.5860 5.1072  0.001 **
+## Sex:Pop    1 0.002954 0.0029542 0.05244  6.0105 3.7891  0.002 **
+## Residuals 49 0.024084 0.0004915 0.42753                         
+## Total     53 0.056333                                           
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Call: lm.rrpp(f1 = D ~ logSize + Sex * Pop, SS.type = &quot;I&quot;, data = Pupfish,  
+##     print.progress = FALSE)</code></pre>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb51-1" title="1"><span class="kw">anova</span>(fit)</a></code></pre></div>
+<pre><code>## 
+## Analysis of Variance, using Residual Randomization
+## Permutation procedure: Randomization of null model residuals 
+## Number of permutations: 1000 
+## Estimation method: Ordinary Least Squares 
+## Sums of Squares and Cross-products: Type I 
+## Effect sizes (Z) based on F distributions
+## 
+##           Df       SS        MS     Rsq       F      Z Pr(&gt;F)   
+## logSize    1 0.014019 0.0140193 0.24886 28.5232 5.2763  0.001 **
+## Sex        1 0.007615 0.0076151 0.13518 15.4933 5.1241  0.001 **
+## Pop        1 0.007661 0.0076606 0.13599 15.5860 5.1072  0.001 **
+## Sex:Pop    1 0.002954 0.0029542 0.05244  6.0105 3.7891  0.002 **
+## Residuals 49 0.024084 0.0004915 0.42753                         
+## Total     53 0.056333                                           
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Call: lm.rrpp(f1 = coords ~ logSize + Sex * Pop, SS.type = &quot;I&quot;, data = Pupfish,  
+##     print.progress = FALSE)</code></pre>
+<p>The ANOVA results with either method are exactly the same (see also <code>summary(fit)</code>).</p>
+<hr />
+<p><strong><em>Comparison to Vegan</em></strong></p>
+<p>The previous analysis has parallels to other R-functions, notably the <code>adonis</code> function in <code>vegan</code>. However, there are some important differences. A simple example illustrates these:</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb53-1" title="1">fit.uni &lt;-<span class="st"> </span><span class="kw">lm.rrpp</span>(logSize <span class="op">~</span><span class="st"> </span>Sex<span class="op">*</span>Pop, <span class="dt">data=</span>Pupfish, <span class="dt">print.progress =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb53-2" title="2"><span class="kw">anova</span>(fit.uni)</a></code></pre></div>
+<pre><code>## 
+## Analysis of Variance, using Residual Randomization
+## Permutation procedure: Randomization of null model residuals 
+## Number of permutations: 1000 
+## Estimation method: Ordinary Least Squares 
+## Sums of Squares and Cross-products: Type I 
+## Effect sizes (Z) based on F distributions
+## 
+##           Df      SS       MS     Rsq       F       Z Pr(&gt;F)   
+## Sex        1 0.29130 0.291298 0.25607 25.6202 1.96948  0.001 **
+## Pop        1 0.26743 0.267428 0.23508 23.5208 1.99471  0.001 **
+## Sex:Pop    1 0.01037 0.010366 0.00911  0.9117 0.52055  0.360   
+## Residuals 50 0.56849 0.011370 0.49974                          
+## Total     53 1.13758                                           
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Call: lm.rrpp(f1 = logSize ~ Sex * Pop, data = Pupfish, print.progress = FALSE)</code></pre>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb55-1" title="1"><span class="kw">library</span>(vegan)</a></code></pre></div>
+<pre><code>## Loading required package: permute</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## This is vegan 2.5-6</code></pre>
+<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb59-1" title="1"><span class="kw">adonis</span>(<span class="kw">dist</span>(Pupfish<span class="op">$</span>logSize) <span class="op">~</span><span class="st"> </span>Pupfish<span class="op">$</span>Sex<span class="op">*</span>Pupfish<span class="op">$</span>Pop)</a></code></pre></div>
+<pre><code>## 
+## Call:
+## adonis(formula = dist(Pupfish$logSize) ~ Pupfish$Sex * Pupfish$Pop) 
+## 
+## Permutation: free
+## Number of permutations: 999
+## 
+## Terms added sequentially (first to last)
+## 
+##                         Df SumsOfSqs  MeanSqs F.Model      R2 Pr(&gt;F)    
+## Pupfish$Sex              1   0.29130 0.291298 25.6202 0.25607  0.001 ***
+## Pupfish$Pop              1   0.26743 0.267428 23.5208 0.23508  0.001 ***
+## Pupfish$Sex:Pupfish$Pop  1   0.01037 0.010366  0.9117 0.00911  0.340    
+## Residuals               50   0.56849 0.011370         0.49974           
+## Total                   53   1.13758                  1.00000           
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Notice that the SS, MS, Rsq and F values are exactly the same, but the significance values differ. This is because <code>adonis</code> does not use residual randomization. If instead in <code>RRPP</code> one does:</p>
+<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb61-1" title="1">fit.uni &lt;-<span class="st"> </span><span class="kw">lm.rrpp</span>(logSize <span class="op">~</span><span class="st"> </span>Sex<span class="op">*</span>Pop, <span class="dt">data=</span>Pupfish,<span class="dt">RRPP =</span> <span class="ot">FALSE</span>, <span class="dt">print.progress =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb61-2" title="2"><span class="kw">anova</span>(fit.uni)</a></code></pre></div>
+<pre><code>## 
+## Analysis of Variance, using Residual Randomization
+## Permutation procedure: Randomization of raw values (residuals of mean) 
+## Number of permutations: 1000 
+## Estimation method: Ordinary Least Squares 
+## Sums of Squares and Cross-products: Type I 
+## Effect sizes (Z) based on F distributions
+## 
+##           Df      SS       MS     Rsq       F       Z Pr(&gt;F)   
+## Sex        1 0.29130 0.291298 0.25607 25.6202 1.96948  0.001 **
+## Pop        1 0.26743 0.267428 0.23508 23.5208 1.99653  0.001 **
+## Sex:Pop    1 0.01037 0.010366 0.00911  0.9117 0.55219  0.320   
+## Residuals 50 0.56849 0.011370 0.49974                          
+## Total     53 1.13758                                           
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Call: lm.rrpp(f1 = logSize ~ Sex * Pop, RRPP = FALSE, data = Pupfish,  
+##     print.progress = FALSE)</code></pre>
+<p>Now the results are equivalent (but see Anderson and terBraak 2003; Collyer and Adams 2013 etc. for why RRPP is prefered).</p>
+<p>Finally, there are major speed differences between the packages</p>
+<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb63-1" title="1"><span class="kw">include_graphics</span>(<span class="st">&quot;speed.jpg&quot;</span>)  </a></code></pre></div>
+<p><img src="data:image/jpeg;base64,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////////////////////////A+gAAAAA/////////////////////////////wPoAAAAAP////////////////////////////8D6AAAAAD/////////////////////////////A+gAADhCSU0ECAAAAAAAEAAAAAEAAAJAAAACQAAAAAA4QklNBB4AAAAAAAQAAAAAOEJJTQQaAAAAAAM/AAAABgAAAAAAAAAAAAAA+wAAAnsAAAAFAHMAcABlAGUAZAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAACewAAAPsAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAQAAAAAAAG51bGwAAAACAAAABmJvdW5kc09iamMAAAABAAAAAAAAUmN0MQAAAAQAAAAAVG9wIGxvbmcAAAAAAAAAAExlZnRsb25nAAAAAAAAAABCdG9tbG9uZwAAAPsAAAAAUmdodGxvbmcAAAJ7AAAABnNsaWNlc1ZsTHMAAAABT2JqYwAAAAEAAAAAAAVzbGljZQAAABIAAAAHc2xpY2VJRGxvbmcAAAAAAAAAB2dyb3VwSURsb25nAAAAAAAAAAZvcmlnaW5lbnVtAAAADEVTbGljZU9yaWdpbgAAAA1hdXRvR2VuZXJhdGVkAAAAAFR5cGVlbnVtAAAACkVTbGljZVR5cGUAAAAASW1nIAAAAAZib3VuZHNPYmpjAAAAAQAAAAAAAFJjdDEAAAAEAAAAAFRvcCBsb25nAAAAAAAAAABMZWZ0bG9uZwAAAAAAAAAAQnRvbWxvbmcAAAD7AAAAAFJnaHRsb25nAAACewAAAAN1cmxURVhUAAAAAQAAAAAAAG51bGxURVhUAAAAAQAAAAAAAE1zZ2VURVhUAAAAAQAAAAAABmFsdFRhZ1RFWFQAAAABAAAAAAAOY2VsbFRleHRJc0hUTUxib29sAQAAAAhjZWxsVGV4dFRFWFQAAAABAAAAAAAJaG9yekFsaWduZW51bQAAAA9FU2xpY2VIb3J6QWxpZ24AAAAHZGVmYXVsdAAAAAl2ZXJ0QWxpZ25lbnVtAAAAD0VTbGljZVZlcnRBbGlnbgAAAAdkZWZhdWx0AAAAC2JnQ29sb3JUeXBlZW51bQAAABFFU2xpY2VCR0NvbG9yVHlwZQAAAABO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bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIiB4bWxuczpwaG90b3Nob3A9Imh0dHA6Ly9ucy5hZG9iZS5jb20vcGhvdG9zaG9wLzEuMC8iIHhtbG5zOnhtcD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLyIgeG1wTU06RG9jdW1lbnRJRD0iNzhDMjdDRTY0MjQwNDE3REEwQkJEOURDMkJBMzY0QUIiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6YjU5OWE0M2EtMzAwYi1lYjQzLTk5NGMtMWFhMjIxMjFlZTdmIiB4bXBNTTpPcmlnaW5hbERvY3VtZW50SUQ9Ijc4QzI3Q0U2NDI0MDQxN0RBMEJCRDlEQzJCQTM2NEFCIiBkYzpmb3JtYXQ9ImltYWdlL2pwZWciIHBob3Rvc2hvcDpDb2xvck1vZGU9IjMiIHBob3Rvc2hvcDpJQ0NQcm9maWxlPSIiIHhtcDpDcmVhdGVEYXRlPSIyMDE4LTEwLTIzVDEzOjU5OjAxLTA1OjAwIiB4bXA6TW9kaWZ5RGF0ZT0iMjAxOC0xMC0yM1QxMzo1OToyNi0wNTowMCIgeG1wOk1ldGFkYXRhRGF0ZT0iMjAxOC0xMC0yM1QxMzo1OToyNi0wNTowMCI+IDx4bXBNTTpIaXN0b3J5PiA8cmRmOlNlcT4gPHJkZjpsaSBzdEV2dDphY3Rpb249InNhdmVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOmI1OTlhNDNhLTMwMGItZWI0My05OTRjLTFhYTIyMTIxZWU3ZiIgc3RFdnQ6d2hlbj0iMjAxOC0xMC0yM1QxMzo1OToyNi0wNTowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTcgKFdpbmRvd3MpIiBzdEV2dDpjaGFuZ2VkPSIvIi8+IDwvcmRmOlNlcT4gPC94bXBNTTpIaXN0b3J5PiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8P3hwYWNrZXQgZW5kPSJ3Ij8+/+4AIUFkb2JlAGQAAAAAAQMAEAMCAwYAAAAAAAAAAAAAAAD/2wCEAAYEBAQFBAYFBQYJBgUGCQsIBgYICwwKCgsKCgwQDAwMDAwMEAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwBBwcHDQwNGBAQGBQODg4UFA4ODg4UEQwMDAwMEREMDAwMDAwRDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDP/CABEIAPsCewMBEQACEQEDEQH/xADGAAEAAgMBAQEAAAAAAAAAAAAABQYBAgQDBwgBAQAAAAAAAAAAAAAAAAAAAAAQAAAGAQMCBgICAgMAAAAAAAECAwQFBgARFgcgNhAwQBIUNxUmExewIWAxCBEAAgECAwMFCA0JBQUECgMAAQIDEQQAEgUhIhMxMkIUNSBBUmJyI5S0EDBRYXGR0YKS0jN1BkCxQ1NjJHTUFYFzkzQ2oaKDVGXBskSVUGCjs2QlRVVGN4QWBxIBAAAAAAAAAAAAAAAAAAAAsP/aAAwDAQECEQMRAAAA/VIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMGQDABkwZAAAAAAAAAMGQAADBkAAAAAAGDIMGTBkGDJgGQAAAAAAAchQSRI41PIEgeRzHQWMsYAAAAABTDpKweZLHMeR7nscB6HQc50n0IAAAAAGD5uTpVSZI80OskytHCSRwH0cmwAAAAAADUjjsANDQ9Acp1HoeoAAAAAByGQYPU0OY6TQ9DgO4Gp1gAAAAAEYdhqZNjhOs3PA9DcyeZ0gAAAAH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" width="635" /></p>
+<hr />
+<p><strong><em>Example 3: Pairwise comparisons of groups, slopes, and dispersion</em></strong></p>
+<p>The function, pairwise, can be used to test pairwise differences between least-squares means with:</p>
+<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb64-1" title="1">PWT &lt;-<span class="st"> </span><span class="kw">pairwise</span>(fit, <span class="dt">groups =</span> <span class="kw">interaction</span>(Pupfish<span class="op">$</span>Sex, Pupfish<span class="op">$</span>Pop))</a>
+<a class="sourceLine" id="cb64-2" title="2"><span class="kw">summary</span>(PWT, <span class="dt">confidence =</span> <span class="fl">0.95</span>)</a></code></pre></div>
+<pre><code>## 
+## Pairwise comparisons
+## 
+## Groups: F.Marsh M.Marsh F.Sinkhole M.Sinkhole 
+## 
+## RRPP: 1000 permutations
+## 
+## LS means:
+## Vectors hidden (use show.vectors = TRUE to view)
+## 
+## Pairwise distances between means, plus statistics
+##                                d  UCL (95%)          Z Pr &gt; d
+## F.Marsh:M.Marsh       0.03579214 0.03278645  2.3823792  0.015
+## F.Marsh:F.Sinkhole    0.03639758 0.03601481  1.8826842  0.044
+## F.Marsh:M.Sinkhole    0.03809715 0.04432235 -0.6444723  0.735
+## M.Marsh:F.Sinkhole    0.03681731 0.04779814 -0.2862096  0.601
+## M.Marsh:M.Sinkhole    0.02694896 0.03646576 -0.9473499  0.830
+## F.Sinkhole:M.Sinkhole 0.01939739 0.03295865 -1.6850973  0.962</code></pre>
+<p>Much like the tukeyHSD function in the R stats package, <code>pairwise</code> will generate tables with confidence intervals and <em>P</em>-values for the pairwise statistic, Euclidean distance between least-squares means.</p>
+<p>This function can also be used to compare the within-group dispersion (=disparity) among groups:</p>
+<div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb66-1" title="1"><span class="kw">summary</span>(PWT, <span class="dt">confidence =</span> <span class="fl">0.95</span>, <span class="dt">test.type =</span> <span class="st">&quot;var&quot;</span>)</a></code></pre></div>
+<pre><code>## 
+## Pairwise comparisons
+## 
+## Groups: F.Marsh M.Marsh F.Sinkhole M.Sinkhole 
+## 
+## RRPP: 1000 permutations
+## 
+## 
+## Observed variances by group
+## 
+##      F.Marsh      M.Marsh   F.Sinkhole   M.Sinkhole 
+## 0.0003307608 0.0003029777 0.0005061781 0.0006752856 
+## 
+## Pairwise distances between variances, plus statistics
+##                                  d    UCL (95%)          Z Pr &gt; d
+## F.Marsh:M.Marsh       0.0000277831 0.0002222405 -0.9578383  0.817
+## F.Marsh:F.Sinkhole    0.0001754172 0.0002102135  1.2932007  0.111
+## F.Marsh:M.Sinkhole    0.0003445248 0.0002111166  3.9432183  0.002
+## M.Marsh:F.Sinkhole    0.0002032003 0.0002371925  1.4168137  0.104
+## M.Marsh:M.Sinkhole    0.0003723079 0.0002361800  3.7420944  0.002
+## F.Sinkhole:M.Sinkhole 0.0001691075 0.0002341786  0.9546287  0.168</code></pre>
+<p>Additionally, for regression models, this function can also be used for pairwise comparison of slopes in analysis of covariance (ANCOVA) designs.</p>
+<div class="sourceCode" id="cb68"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb68-1" title="1">fit2 &lt;-<span class="st"> </span><span class="kw">lm.rrpp</span>(coords <span class="op">~</span><span class="st"> </span>logSize <span class="op">*</span><span class="st"> </span>Sex <span class="op">*</span><span class="st"> </span>Pop, <span class="dt">SS.type =</span> <span class="st">&quot;I&quot;</span>, </a>
+<a class="sourceLine" id="cb68-2" title="2">                <span class="dt">data =</span> Pupfish, <span class="dt">print.progress =</span> <span class="ot">FALSE</span>, <span class="dt">iter =</span> <span class="dv">999</span>) </a>
+<a class="sourceLine" id="cb68-3" title="3"><span class="kw">anova</span>(fit, fit2, <span class="dt">print.progress =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
+<pre><code>## 
+## Analysis of Variance, using Residual Randomization
+## Permutation procedure: Randomization of null model residuals 
+## Number of permutations: 1000 
+## Estimation method: Ordinary Least Squares 
+## Effect sizes (Z) based on F distributions
+## 
+##                                     ResDf Df      RSS        SS         MS
+## coords ~ logSize + Sex * Pop (Null)    49  1 0.024084                     
+## coords ~ logSize * Sex * Pop           46  3 0.022079 0.0020045 0.00066816
+## Total                                  53    0.056333                     
+##                                          Rsq      F      Z     P Pr(&gt;F)
+## coords ~ logSize + Sex * Pop (Null) 0.000000                           
+## coords ~ logSize * Sex * Pop        0.035583 1.3921 1.1482 0.136       
+## Total</code></pre>
+<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb70-1" title="1">PW2 &lt;-<span class="st"> </span><span class="kw">pairwise</span>(fit2, <span class="dt">fit.null =</span> fit, <span class="dt">groups =</span> groups, </a>
+<a class="sourceLine" id="cb70-2" title="2">                <span class="dt">covariate =</span> Pupfish<span class="op">$</span>logSize, <span class="dt">print.progress =</span> <span class="ot">FALSE</span>) </a>
+<a class="sourceLine" id="cb70-3" title="3">PW2</a></code></pre></div>
+<pre><code>## 
+## Pairwise comparisons
+## 
+## Groups: F.Marsh M.Marsh F.Sinkhole M.Sinkhole 
+## 
+## RRPP: 1000 permutations</code></pre>
+<div class="sourceCode" id="cb72"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb72-1" title="1"><span class="kw">summary</span>(PW2, <span class="dt">confidence =</span> <span class="fl">0.95</span>, </a>
+<a class="sourceLine" id="cb72-2" title="2">        <span class="dt">test.type =</span> <span class="st">&quot;dist&quot;</span>) <span class="co"># distances between slope vector lengths</span></a></code></pre></div>
+<pre><code>## 
+## Pairwise comparisons
+## 
+## Groups: F.Marsh M.Marsh F.Sinkhole M.Sinkhole 
+## 
+## RRPP: 1000 permutations
+## 
+## Slopes (vectors of variate change per one unit of covariate change, by group):
+## Vectors hidden (use show.vectors = TRUE to view)
+## 
+## Slope vector lengths
+##    F.Marsh    M.Marsh F.Sinkhole M.Sinkhole 
+## 0.09846857 0.08899635 0.08048951 0.13005765 
+## 
+## Pairwise absolute difference (d) between vector lengths, plus statistics
+##                                 d  UCL (95%)          Z Pr &gt; d
+## F.Marsh:M.Marsh       0.009472222 0.08232409 -0.9454087  0.827
+## F.Marsh:F.Sinkhole    0.017979061 0.08835462 -0.6803907  0.700
+## F.Marsh:M.Sinkhole    0.031589079 0.08542505 -0.1828754  0.508
+## M.Marsh:F.Sinkhole    0.008506839 0.04599459 -0.7555811  0.719
+## M.Marsh:M.Sinkhole    0.041061301 0.04803205  1.5290464  0.087
+## F.Sinkhole:M.Sinkhole 0.049568140 0.04566567  2.3115963  0.034</code></pre>
+<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb74-1" title="1"><span class="kw">summary</span>(PW2, <span class="dt">confidence =</span> <span class="fl">0.95</span>, </a>
+<a class="sourceLine" id="cb74-2" title="2">        <span class="dt">test.type =</span> <span class="st">&quot;VC&quot;</span>,</a>
+<a class="sourceLine" id="cb74-3" title="3">        <span class="dt">angle.type =</span> <span class="st">&quot;deg&quot;</span>) <span class="co"># correlation between slope vectors (and angles)</span></a></code></pre></div>
+<pre><code>## 
+## Pairwise comparisons
+## 
+## Groups: F.Marsh M.Marsh F.Sinkhole M.Sinkhole 
+## 
+## RRPP: 1000 permutations
+## 
+## Slopes (vectors of variate change per one unit of covariate change, by group):
+## Vectors hidden (use show.vectors = TRUE to view)
+## 
+## Pairwise statistics based on slopes vector correlations (r) and angles, acos(r)
+## The null hypothesis is that r = 1 (parallel vectors).
+## This null hypothesis is better treated as the angle between vectors = 0
+##                               r    angle UCL (95%)          Z Pr &gt; angle
+## F.Marsh:M.Marsh       0.6139591 52.12367  83.58445 -0.2370170      0.549
+## F.Marsh:F.Sinkhole    0.6318267 50.81498  83.57546 -0.1960268      0.527
+## F.Marsh:M.Sinkhole    0.4461018 63.50614  81.89039  0.5854677      0.273
+## M.Marsh:F.Sinkhole    0.7175129 44.15048  63.60905  0.1142875      0.391
+## M.Marsh:M.Sinkhole    0.5629975 55.73665  65.19951  1.0135201      0.154
+## F.Sinkhole:M.Sinkhole 0.4627734 62.43378  60.22153  2.0486637      0.037</code></pre>
+<hr />
+<p><strong><em>Example 4: GLS Estimation</em></strong></p>
+<p>Another advantage of <code>RRPP</code> is its ability to perform GLS estimation via residual randomization. For details on the underlying conceptual development see (Adams and Collyer, 2018a; 2018b; earlier work: Adams 2014; Adams and Collyer, 2015). The following code creates two <code>lm.rrpp</code> fits using OLS and GLS, respectively, and evaluates them as in previous examples. Non-independence among objects (species) is due to phylogeny:</p>
+<div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb76-1" title="1"><span class="kw">data</span>(PlethMorph)</a>
+<a class="sourceLine" id="cb76-2" title="2"><span class="kw">library</span>(ape)</a>
+<a class="sourceLine" id="cb76-3" title="3">tree &lt;-<span class="st"> </span><span class="kw">read.tree</span>(<span class="st">&#39;plethtree.tre&#39;</span>)</a>
+<a class="sourceLine" id="cb76-4" title="4"><span class="kw">plot</span>(tree,<span class="dt">show.tip.label =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAEgCAMAAAAjXV6yAAAABlBMVEUAAAD///+l2Z/dAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAEOklEQVR4nO3aWXLbMBAAUfn+l06VU44cikRjGWxkvy9ZCzhqE6KyvL6U9Jo9wOoMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwEDAQMBAwE5gd6jVY4Xp93vdUESfPHmz9B0vzx6iZwi3V51coHCp5g70DBpzy8asMtVrRoRqD0fX1Ppm0DVZ8ShXYNdPmwW+zz4Zb333rwAYs2B2p48oT1yhcNvu7cb4sNX26Bgxto7KJVyz13i2V8ZkVezTYMNHaG+wZ60hbrsndyD77NorR47mfTDc+gvMU7HXTDQJ0vW8fDbbMoHtQtNoWBwGKBsvdJg1Hvpcui6517BgI7BXKL/X5l+1uLsW6gyGUbbBXILZYONIWBwO6B3GLHJ7S93ZaJIhcN+AS9CjRi/qEHKPMRiM6Ylt9B4URL+Ax0+YRBtgvUrnaiJWCg4aYP8D8Dgc6B3GLZy/d8SU+hgZo/oFsH6CA20Oc9brHzxWYvEuewG0p/380b6mTJiEV6+BuocL5X4qevn34Vc6woIlDAZ/StA5U+HPaaIdKB6v6c9aAtVnZ38xwrMhCoDXTzv+54qwsU9OWHjzRfVaDkIw1zrOgnUOk+edoWSz06bo4VtQfyDMpZIWaOFeUHCvqwyTjSUgoCXT3HLfZ5u9McK0r/tuO30uWRuq7eKmu69JNuu8W+RQQaMcI0eYEivzjXjTBNwHRusfuPkLDAdAuMkFB6gcoSOcJsfS9QASPMdpgu+AJVM8JijoGSP569/mFbrDxQ+AiLgUDRH8gZIyym+JRJv/4G/z/ooDlQ+xl170CwXqeXDBQe6HZbbMIXn+MIE45Z7XzYjIvZbb8HHVwEmnDMRRkIlAdyi13ey4+1HHNRuYEir3v3DPS+9bAtlnndjnxTWwU6ZyDw7y1k7KKbb7Fzr+sbXx/bsn71fUGg8+eWr76vokBuse8bTZvqYvV9pVsY6O080JO+KIIu78VAMxad5PQfedxib40pLhaNWGRRnkEjGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCBgIGAgYCPwBJvk7d0WCv4MAAAAASUVORK5CYII=" /><!-- --></p>
+<div class="sourceCode" id="cb77"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb77-1" title="1">fitOLS &lt;-<span class="st"> </span><span class="kw">lm.rrpp</span>(TailLength <span class="op">~</span><span class="st"> </span>SVL, </a>
+<a class="sourceLine" id="cb77-2" title="2">                  <span class="dt">data =</span> PlethMorph,</a>
+<a class="sourceLine" id="cb77-3" title="3">                  <span class="dt">print.progress =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb77-4" title="4">fitGLS &lt;-<span class="st"> </span><span class="kw">lm.rrpp</span>(TailLength <span class="op">~</span><span class="st"> </span>SVL, </a>
+<a class="sourceLine" id="cb77-5" title="5">                  <span class="dt">data =</span> PlethMorph, </a>
+<a class="sourceLine" id="cb77-6" title="6">                  <span class="dt">Cov =</span> PlethMorph<span class="op">$</span>PhyCov,</a>
+<a class="sourceLine" id="cb77-7" title="7">                  <span class="dt">print.progress =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb77-8" title="8"></a>
+<a class="sourceLine" id="cb77-9" title="9"><span class="kw">anova</span>(fitOLS)</a></code></pre></div>
+<pre><code>## 
+## Analysis of Variance, using Residual Randomization
+## Permutation procedure: Randomization of null model residuals 
+## Number of permutations: 1000 
+## Estimation method: Ordinary Least Squares 
+## Sums of Squares and Cross-products: Type I 
+## Effect sizes (Z) based on F distributions
+## 
+##           Df     SS     MS     Rsq      F      Z Pr(&gt;F)   
+## SVL        1 3707.9 3707.9 0.76849 116.18 2.6598  0.001 **
+## Residuals 35 1117.0   31.9 0.23151                        
+## Total     36 4824.9                                       
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Call: lm.rrpp(f1 = TailLength ~ SVL, data = PlethMorph, print.progress = FALSE)</code></pre>
+<div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb79-1" title="1"><span class="kw">anova</span>(fitGLS)</a></code></pre></div>
+<pre><code>## 
+## Analysis of Variance, using Residual Randomization
+## Permutation procedure: Randomization of null model residuals 
+## Number of permutations: 1000 
+## Estimation method: Generalized Least-Squares (via OLS projection) 
+## Sums of Squares and Cross-products: Type I 
+## Effect sizes (Z) based on F distributions
+## 
+##           Df     SS      MS     Rsq      F      Z Pr(&gt;F)   
+## SVL        1 189.34 189.343 0.34259 18.239 1.8392  0.001 **
+## Residuals 35 363.33  10.381 0.65741                        
+## Total     36 552.68                                        
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Call: lm.rrpp(f1 = TailLength ~ SVL, data = PlethMorph, Cov = PlethMorph$PhyCov,  
+##     print.progress = FALSE)</code></pre>
+<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb81-1" title="1"><span class="kw">coef</span>(fitOLS, <span class="dt">test =</span> <span class="ot">TRUE</span>)</a></code></pre></div>
+<pre><code>## 
+## Linear Model fit with lm.rrpp
+## 
+## Number of observations: 37
+## Number of dependent variables: 1
+## Data space dimensions: 1
+## Sums of Squares and Cross-products: Type I
+## Number of permutations: 1000
+## 
+## Statistics (distances) of coefficients with 95 percent confidence intervals,
+## effect sizes, and probabilities of exceeding observed values based on
+## 1000 random permutations using RRPP 
+## 
+##                 d.obs  UCL (95%)        Zd Pr(&gt;d)
+## (Intercept) 1.2992281 78.8741190 -5.455514  1.000
+## SVL         0.9681511  0.3597148  7.473766  0.001</code></pre>
+<div class="sourceCode" id="cb83"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb83-1" title="1"><span class="kw">coef</span>(fitGLS, <span class="dt">test =</span> <span class="ot">TRUE</span>)</a></code></pre></div>
+<pre><code>## 
+## Linear Model fit with lm.rrpp
+## 
+## Number of observations: 37
+## Number of dependent variables: 1
+## Data space dimensions: 1
+## Sums of Squares and Cross-products: Type I
+## Number of permutations: 1000
+## 
+## Statistics (distances) of coefficients with 95 percent confidence intervals,
+## effect sizes, and probabilities of exceeding observed values based on
+## 1000 random permutations using RRPP 
+## 
+##                 d.obs  UCL (95%)        Zd Pr(&gt;d)
+## (Intercept) 8.4214060 82.5321478 -3.455280  1.000
+## SVL         0.8307223  0.4691628  4.444445  0.001</code></pre>
+<p>Although analyses on either model fit indicate a significant relationship between tail length and snout-to-vent length (SVL), the GLS coefficients test and ANOVA show how phylogenetic auto-correlation among species augments the OLS-estimated relationship.</p>
+<p>Importantly, <code>RRPP</code> can be used with <em>ANY</em> covariance matrix that describes the expected non-independence among objects. Thus, while phylogenetic non-independence was shown here, one could use an appropriate spatial or temporal covariance matrix to account for non-independence due to these other effects (NOTE: other weighted GLS analyses, such as for accounting for heteroscedasticity, can be modeled in this fashion also).</p>
+<p>These methods also work for multivariate data (note how predictions display less variation when non-independence is accounted for using GLS):</p>
+<div class="sourceCode" id="cb85"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb85-1" title="1">Y &lt;-<span class="st"> </span><span class="kw">as.matrix</span>(<span class="kw">cbind</span>(PlethMorph<span class="op">$</span>TailLength,</a>
+<a class="sourceLine" id="cb85-2" title="2">PlethMorph<span class="op">$</span>HeadLength,</a>
+<a class="sourceLine" id="cb85-3" title="3">PlethMorph<span class="op">$</span>TailLength,</a>
+<a class="sourceLine" id="cb85-4" title="4">PlethMorph<span class="op">$</span>Snout.eye,</a>
+<a class="sourceLine" id="cb85-5" title="5">PlethMorph<span class="op">$</span>BodyWidth,</a>
+<a class="sourceLine" id="cb85-6" title="6">PlethMorph<span class="op">$</span>Forelimb,</a>
+<a class="sourceLine" id="cb85-7" title="7">PlethMorph<span class="op">$</span>Hindlimb))</a>
+<a class="sourceLine" id="cb85-8" title="8">PlethMorph &lt;-<span class="st"> </span><span class="kw">rrpp.data.frame</span>(PlethMorph, <span class="dt">Y=</span>Y)</a>
+<a class="sourceLine" id="cb85-9" title="9"></a>
+<a class="sourceLine" id="cb85-10" title="10">fitOLSm &lt;-<span class="st"> </span><span class="kw">lm.rrpp</span>(Y <span class="op">~</span><span class="st"> </span>SVL, <span class="dt">data =</span> PlethMorph,</a>
+<a class="sourceLine" id="cb85-11" title="11">                   <span class="dt">print.progress =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb85-12" title="12">fitGLSm &lt;-<span class="st"> </span><span class="kw">lm.rrpp</span>(Y <span class="op">~</span><span class="st"> </span>SVL, <span class="dt">data =</span> PlethMorph, </a>
+<a class="sourceLine" id="cb85-13" title="13">                   <span class="dt">Cov =</span> PlethMorph<span class="op">$</span>PhyCov,</a>
+<a class="sourceLine" id="cb85-14" title="14">                   <span class="dt">print.progress =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb85-15" title="15"></a>
+<a class="sourceLine" id="cb85-16" title="16"><span class="kw">anova</span>(fitOLSm)</a></code></pre></div>
+<pre><code>## 
+## Analysis of Variance, using Residual Randomization
+## Permutation procedure: Randomization of null model residuals 
+## Number of permutations: 1000 
+## Estimation method: Ordinary Least Squares 
+## Sums of Squares and Cross-products: Type I 
+## Effect sizes (Z) based on F distributions
+## 
+##           Df      SS     MS     Rsq     F      Z Pr(&gt;F)   
+## SVL        1  8135.3 8135.3 0.76867 116.3 3.5562  0.001 **
+## Residuals 35  2448.3   70.0 0.23133                       
+## Total     36 10583.7                                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Call: lm.rrpp(f1 = Y ~ SVL, data = PlethMorph, print.progress = FALSE)</code></pre>
+<div class="sourceCode" id="cb87"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb87-1" title="1"><span class="kw">anova</span>(fitGLSm)</a></code></pre></div>
+<pre><code>## 
+## Analysis of Variance, using Residual Randomization
+## Permutation procedure: Randomization of null model residuals 
+## Number of permutations: 1000 
+## Estimation method: Generalized Least-Squares (via OLS projection) 
+## Sums of Squares and Cross-products: Type I 
+## Effect sizes (Z) based on F distributions
+## 
+##           Df      SS     MS     Rsq      F      Z Pr(&gt;F)   
+## SVL        1  395.35 395.35 0.34715 18.611 2.2771  0.001 **
+## Residuals 35  743.49  21.24 0.65285                        
+## Total     36 1138.84                                       
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Call: lm.rrpp(f1 = Y ~ SVL, data = PlethMorph, Cov = PlethMorph$PhyCov,  
+##     print.progress = FALSE)</code></pre>
+<div class="sourceCode" id="cb89"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb89-1" title="1">sizeDF &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">SVL =</span> <span class="kw">sort</span>(PlethMorph<span class="op">$</span>SVL))</a></code></pre></div>
+<p><strong><em>Analytical Summary</em></strong></p>
+<p>On the surface, these examples and their analyses should seem intuitive to any user of R who has used the <code>lm</code> function plus its associated S3 generics (<code>coef, predict, resid, fitted, summary</code>, and <code>anova</code>), all of which can be used on <code>lm.rrpp</code> model fits. The functions, <code>pairwise</code> (not an S3 generic) and <code>anova</code>, also allow pairwise comparisons of least-squares means or slopes and multi-model inferences, respectively. Advanced users will recognize, however, much more extensive useable results for adaptive programming. The output from a <code>lm.rrpp</code> fit is arranged hierarchically, i.e.:</p>
+<div class="sourceCode" id="cb90"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb90-1" title="1"><span class="kw">attributes</span>(fit)</a></code></pre></div>
+<pre><code>## $names
+## [1] &quot;call&quot;     &quot;LM&quot;       &quot;ANOVA&quot;    &quot;PermInfo&quot;
+## 
+## $class
+## [1] &quot;lm.rrpp&quot;</code></pre>
+<p>Within the <code>$LM</code> partition, all attributes of the lm function are found, in addition to coefficients for every random permutation. Within the <code>$ANOVA</code> partition, the SS type, plus <code>SS</code>, <code>MS</code>, <code>R</code><sup>2</sup>, <code>F</code>, and Cohen’s <code>f</code><sup>2</sup> for all permutations, as well as effect sizes estimated for each of these are provided. Within the <code>$PermInfo</code> partition, the number of permutations, type (RRPP or randomization of “full” data values, FRPP), and sampling frame in every permutation (schedule) are provided. Thus, lm.rrpp is the workhorse that makes all downstream analysis efficient.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
